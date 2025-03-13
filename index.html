@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音频表格</title>
+    <style>
+        #newTable {
+            margin-bottom: 50px;
+            /* 调整间距大小 */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        audio {
+            width: 100%;
+            display: none;
+            /* 隐藏音频控件，仅通过按钮播放 */
+        }
+
+        button {
+            padding: 12px 24px;
+            /* 增大内边距 */
+            font-size: 18px;
+            /* 增大字体大小 */
+        }
+    </style>
+
+    <script>
+        let playingAudio;
+        function playAudio(audioSrc) {
+            if (playingAudio) {
+                playingAudio.pause();
+                playingAudio.currentTime = 0;
+                if (playingAudio.src === audioSrc) {
+                    playingAudio = null;
+                    return;
+                }
+            }
+            playingAudio = new Audio(audioSrc);
+            playingAudio.play();
+        }
+    </script>
+    <script>
+        function checkFileExistsSync(filePath) {
+            let xhr = new XMLHttpRequest();
+            xhr.open('HEAD', filePath, false);
+            // 同步请求
+            xhr.send();
+            return xhr.status === 200;
+        }
+    </script>
+
+    <!-- 预加载音频文件 -->
+    <link rel="preload" href="data/prompt_wav/gaoxing_01.wav" as="audio">
+    <link rel="preload" href="data/prompt_wav/shangxin.wav" as="audio">
+    <link rel="preload" href="data/prompt_wav/shengqi.wav" as="audio">
+    <link rel="preload" href="data/prompt_wav/haipa.wav" as="audio">
+    <link rel="preload" href="data/prompt_wav/zhiye.wav" as="audio">
+</head>
+
+<body>
+    <h1>音频表格</h1>
+
+    <!-- 表格，包含所有 -->
+    <table id="newTable">
+        <tbody>
+            <tr>
+                <td>带情感样本音频-开心</td>
+                <td>带情感样本音频-伤心</td>
+                <td>带情感样本音频-生气</td>
+                <td>带情感样本音频-恐惧</td>
+                <td>不带情感样本</td>
+            </tr>
+            <tr>
+                <td>
+                    <button onclick="playAudio('data/prompt_wav/gaoxing_01.wav')">播放</button>
+                    <audio id="audio-new-1" src="data/prompt_wav/gaoxing_01.wav" preload="metadata"
+                        controls=false></audio>
+                </td>
+                <td>
+                    <button onclick="playAudio('data/prompt_wav/shangxin.wav')">播放</button>
+                    <audio id="audio-new-1" src="data/prompt_wav/shangxin.wav" preload="metadata"
+                        controls=false></audio>
+                </td>
+                <td>
+                    <button onclick="playAudio('data/prompt_wav/shengqi.wav')">播放</button>
+                    <audio id="audio-new-1" src="data/prompt_wav/shengqi.wav" preload="metadata" controls=false></audio>
+                </td>
+                <td>
+                    <button onclick="playAudio('data/prompt_wav/haipa.wav')">播放</button>
+                    <audio id="audio-new-1" src="data/prompt_wav/haipa.wav" preload="metadata" controls=false></audio>
+                </td>
+                <td>
+                    <button onclick="playAudio('data/prompt_wav/zhiye.wav')">播放</button>
+                    <audio id="audio-new-2" src="data/prompt_wav/zhiye.wav" preload="metadata" controls=false></audio>
+                </td>
+            </tr>
+
+            <script>
+                const rows = 50;
+                const cols = 5;
+                const baseFileName = 'audio';
+
+                let tableBody = document.querySelector('tbody');
+
+                {
+                    let row = document.createElement('tr');
+                    let cell = document.createElement('td');
+                    cell.innerHTML = '';
+                    row.appendChild(cell);
+                    // 这里将每个表头单元格重复添加一次，以适应新的列数
+                    for (let j = 0; j < cols; j++) {
+                        const headers = ['带情感样本 + zero shot', '不带情感样本 + 情感instruct', '不带情感样本 + 强烈情感instruct', '带情感样本 + 情感instruct', '带情感样本 + 空instruct'];
+                        let cell1 = document.createElement('td');
+                        cell1.innerHTML = headers[j];
+                        row.appendChild(cell1);
+                        let cell2 = document.createElement('td');
+                        cell2.innerHTML = '相似度'; // 新增相似度表头
+                        row.appendChild(cell2);
+                    }
+                    tableBody.appendChild(row);
+                }
+
+                {
+                    let row = document.createElement('tr');
+                    let cell = document.createElement('td');
+                    cell.innerHTML = '平均音色相似度';
+                    row.appendChild(cell);
+                    // 这里将每个数据单元格重复添加一次，以适应新的列数
+                    const data = ['77.71', '78.57', '77.78', '73.94', '73.19'];
+                    for (let j = 0; j < cols; j++) {
+                        let cell1 = document.createElement('td');
+                        cell1.innerHTML = data[j];
+                        row.appendChild(cell1);
+                        let cell2 = document.createElement('td');
+                        cell2.innerHTML = '';
+                        row.appendChild(cell2);
+                    }
+                    tableBody.appendChild(row);
+                }
+
+                let subFolders = ['gaoxing_zero_shot_50_out/gaoxing_zero_shot_',
+                    'zhiye_instruct_50_out/zhiye_instruct_',
+                    'zhiye_v2_instruct_50_out/zhiye_v2_instruct_',
+                    'gaoxing_instruct_50_out/gaoxing_instruct_',
+                    'gaoxing_v2_instruct_50_out/gaoxing_v2_instruct_'
+                ];
+                let temp = [
+                    ['gaoxing_zero_shot_50_out/gaoxing_zero_shot_',
+                        'zhiye_instruct_50_out/zhiye_instruct_',
+                        'zhiye_v2_instruct_50_out/zhiye_v2_instruct_',
+                        'gaoxing_instruct_50_out/gaoxing_instruct_',
+                        'gaoxing_v2_instruct_50_out/gaoxing_v2_instruct_'
+                    ],
+                    ['gaoxing_zero_shot_50_out/shangxin_zero_shot_',
+                        'zhiye_instruct_50_out/zhiye_instruct_',
+                        'zhiye_v2_instruct_50_out/zhiye_v2_instruct_',
+                        'gaoxing_instruct_50_out/shangxin_instruct_',
+                        'gaoxing_v2_instruct_50_out/shangxin_v2_instruct_'
+                    ],
+                    ['gaoxing_zero_shot_50_out/jingya_zero_shot_',
+                        'zhiye_instruct_50_out/zhiye_instruct_',
+                        'zhiye_v2_instruct_50_out/zhiye_v2_instruct_',
+                        'gaoxing_instruct_50_out/jingya_instruct_',
+                        'gaoxing_v2_instruct_50_out/jingya_v2_instruct_'
+                    ],
+                    ['gaoxing_zero_shot_50_out/shengqi_zero_shot_',
+                        'zhiye_instruct_50_out/zhiye_instruct_',
+                        'zhiye_v2_instruct_50_out/zhiye_v2_instruct_',
+                        'gaoxing_instruct_50_out/shengqi_instruct_',
+                        'gaoxing_v2_instruct_50_out/shengqi_v2_instruct_'
+                    ],
+                    ['gaoxing_zero_shot_50_out/haipa_zero_shot_',
+                        'zhiye_instruct_50_out/zhiye_instruct_',
+                        'zhiye_v2_instruct_50_out/zhiye_v2_instruct_',
+                        'gaoxing_instruct_50_out/haipa_instruct_',
+                        'gaoxing_v2_instruct_50_out/haipa_v2_instruct_'
+                    ]
+                ];
+
+                // 存储音频名称和相似度分数的映射
+                const similarityMap = {};
+
+                // 读取 sim.txt 文件并填充 similarityMap
+                async function readSimFiles() {
+                    const folders = await fetch('data/').then(response => response.text()).then(text => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(text, 'text/html');
+                        const links = doc.querySelectorAll('a');
+                        return Array.from(links).map(link => link.textContent).filter(folder => folder.endsWith('/') && folder !== 'prompt_wav/').map(folder => folder.slice(0, -1));
+                    });
+                    for (const folder of folders) {
+                        const filePath = `data/${folder}/sim.txt`;
+                        try {
+                            const response = await fetch(filePath);
+                            const text = await response.text();
+                            const lines = text.split('\n');
+                            for (const line of lines) {
+                                const [audioName, similarity] = line.split(' '); // 假设中间是空格分隔
+                                if (audioName && similarity) {
+                                    similarityMap[audioName.trim()] = parseFloat(similarity.trim()).toFixed(2);
+                                }
+                            }
+                        } catch (error) {
+                            console.error(`Error reading ${filePath}:`, error);
+                        }
+                    }
+                    // 打印 similarityMap 到控制台
+                    console.log('Similarity Map:', similarityMap);
+                }
+
+                // 等待读取 sim.txt 文件完成后再生成表格
+                readSimFiles().then(() => {
+                    const iwhiteList = [
+                        21, 22, 23, 24, 25, 26, 27, 28, 29, 30
+                    ]
+                    const jwhiteList = [
+                        0, 3, 4
+                    ]
+                    for (let i = 0; i < rows; i++) {
+                        let row = document.createElement('tr');
+                        if (i % 10 == 0) {
+                            let cell = document.createElement('td');
+                            cell.rowSpan = 10;
+                            const emos = ['开心', '伤心', '惊讶', '生气', '恐惧'];
+                            cell.innerText = emos[Math.floor(i / 10)];
+                            row.appendChild(cell);
+                        }
+                        for (let j = 1; j <= cols; j++) {
+                            let audioId = `audio-${i * cols + j}`;
+                            let rowIndex = Math.floor(i / 10);
+                            let audioFileName = `data/${temp[rowIndex][j - 1]}${i + 1}.wav`;
+                            const audioName = audioFileName.split('/').pop();
+                            if (!(jwhiteList.includes(j - 1) && iwhiteList.includes(i + 1)) && checkFileExistsSync(audioFileName)) {
+                                // 预加载音频文件
+                                let preloadLink = document.createElement('link');
+                                preloadLink.rel = 'preload';
+                                preloadLink.as = 'audio';
+                                preloadLink.href = audioFileName;
+                                document.head.appendChild(preloadLink);
+
+                                let audio = document.createElement('audio');
+                                audio.id = audioId;
+                                audio.src = audioFileName;
+                                audio.preload = 'metadata';
+                                audio.controls = false;
+
+                                let playButton = document.createElement('button');
+                                playButton.textContent = '播放';
+                                playButton.onclick = function () {
+                                    if (playingAudio) {
+                                        playingAudio.pause();
+                                        playingAudio.currentTime = 0;
+                                        if (playingAudio == audio) {
+                                            playingAudio = null;
+                                            return;
+                                        }
+                                        playingAudio = null;
+                                    }
+                                    playingAudio = audio;
+                                    audio.play();
+                                };
+
+                                let cell1 = document.createElement('td');
+                                cell1.appendChild(playButton);
+                                cell1.appendChild(audio);
+                                row.appendChild(cell1);
+
+                                let cell2 = document.createElement('td');
+                                if (similarityMap[audioName]) {
+                                    cell2.innerText = similarityMap[audioName];
+                                } else {
+                                    cell2.innerText = '';
+                                }
+                                row.appendChild(cell2);
+                            } else {
+                                let cell1 = document.createElement('td');
+                                cell1.innerText = '';
+                                row.appendChild(cell1);
+
+                                let cell2 = document.createElement('td');
+                                cell2.innerText = '';
+                                row.appendChild(cell2);
+                            }
+                        }
+                        tableBody.appendChild(row);
+                    }
+                });
+            </script>
+        </tbody>
+    </table>
+</body>
+
+</html>
