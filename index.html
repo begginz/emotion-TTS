@@ -237,7 +237,7 @@
                             let rowIndex = Math.floor(i / 10);
                             let audioFileName = `data/${temp[rowIndex][j - 1]}${i + 1}.wav`;
                             const audioName = audioFileName.split('/').pop();
-                            if (!(jwhiteList.includes(j - 1) && iwhiteList.includes(i + 1)) && checkFileExistsSync(audioFileName)) {
+                            if (!(jwhiteList.includes(j - 1) && iwhiteList.includes(i + 1))) {
                                 // 预加载音频文件
                                 let preloadLink = document.createElement('link');
                                 preloadLink.rel = 'preload';
