@@ -197,34 +197,24 @@
                 // 存储音频名称和相似度分数的映射
                 const similarityMap = {};
 
-                // 读取 sim.txt 文件并填充 similarityMap
                 async function readSimFiles() {
-                    const folders = await fetch('data/').then(response => response.text()).then(text => {
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(text, 'text/html');
-                        const links = doc.querySelectorAll('a');
-                        return Array.from(links).map(link => link.textContent).filter(folder => folder.endsWith('/') && folder !== 'prompt_wav/').map(folder => folder.slice(0, -1));
-                    });
-                    for (const folder of folders) {
-                        const filePath = `data/${folder}/sim.txt`;
-                        try {
-                            const response = await fetch(filePath);
-                            const text = await response.text();
-                            const lines = text.split('\n');
-                            for (const line of lines) {
-                                const [audioName, similarity] = line.split(' '); // 假设中间是空格分隔
-                                if (audioName && similarity) {
-                                    similarityMap[audioName.trim()] = parseFloat(similarity.trim()).toFixed(2);
-                                }
+                    const filePath = `data/sim_total.md`;
+                    try {
+                        const response = await fetch(filePath);
+                        const text = await response.text();
+                        const lines = text.split('\n');
+                        for (const line of lines) {
+                            const [audioName, similarity] = line.split(' '); // 假设中间是空格分隔
+                            if (audioName && similarity) {
+                                similarityMap[audioName.trim()] = parseFloat(similarity.trim()).toFixed(2);
                             }
-                        } catch (error) {
-                            console.error(`Error reading ${filePath}:`, error);
                         }
+                    } catch (error) {
+                        console.error(`Error reading ${filePath}:`, error);
                     }
                     // 打印 similarityMap 到控制台
                     console.log('Similarity Map:', similarityMap);
                 }
-
                 // 等待读取 sim.txt 文件完成后再生成表格
                 readSimFiles().then(() => {
                     const iwhiteList = [
